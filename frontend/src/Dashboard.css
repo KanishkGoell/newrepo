@@ -1,0 +1,127 @@
+/* Global styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background-color: #4b286d; /* Purple color for the header background */
+  color: white;
+}
+
+.header-top {
+  background-color: #4b286d;
+  padding: 10px 0;
+  text-align: right;
+  padding-right: 20px;
+}
+
+.header-top .header-links a {
+  color: white;
+  margin-left: 20px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 10px 100px;
+  background-color: white;
+  color: #4b286d; /* Purple color for the text */
+}
+
+.logo {
+  height: 50px;
+
+}
+
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  margin-left : 700px;
+  gap: 20px;
+}
+
+nav ul li {
+  display: inline;
+}
+
+nav ul li a {
+  color: #4b286d; /* Purple color for the text */
+  text-decoration: none;
+  font-size: 18px;
+}
+
+nav ul li a:hover {
+  text-decoration: underline;
+}
+
+.login-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.login-button:hover {
+  background-color: #0056b3;
+}
+
+.announcement {
+  background-color: #ffe8a1; /* Light yellow background for announcements */
+  border-left: 5px solid #ffbf00; /* Dark yellow border */
+  padding: 10px;
+  margin: 20px auto;
+  max-width: 1200px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.welcome-message {
+  text-align: center;
+  margin: 20px auto;
+  max-width: 1200px;
+}
+
+.dashboard-section {
+  margin: 20px auto;
+  max-width: 1200px;
+  background-color: white;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+}
+
+.dashboard {
+  margin: 20px auto;
+  max-width: 1200px;
+  background-color: white;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+}
+
+footer {
+  text-align: center;
+  padding: 10px;
+  background-color: #4b286d; /* Purple color for the footer background */
+  color: white;
+}
+
+.ag-theme-quartz {
+  margin: auto;
+  height: 600px;
+  width: 95%;
+  position: absolute;
+}
+
