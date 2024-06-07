@@ -114,6 +114,7 @@ app.get("/getTable", (req, res) => {
 
 // Serve the static files from the React app
 app.use(express.static(path.join(__dirname, 'build')));
+app.use("/", (req, res) => {res.sendFile("Server is running")});
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
