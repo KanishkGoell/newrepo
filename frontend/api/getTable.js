@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-module.exports = (req, res) => {
-  const jsonFilePath = path.join(__dirname, 'data.json');
+export default function handler(req, res) {
+  const jsonFilePath = path.join(process.cwd(), 'backend', 'data.json');
   fs.readFile(jsonFilePath, 'utf8', (err, data) => {
     if (err) {
       console.error("Error reading JSON file:", err);
@@ -11,4 +11,4 @@ module.exports = (req, res) => {
     }
     res.status(200).json(JSON.parse(data));
   });
-};
+}

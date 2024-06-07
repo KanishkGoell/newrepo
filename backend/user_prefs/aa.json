@@ -1,0 +1,20 @@
+{
+  "filters": {
+    "country": {
+      "Country": {
+        "filterType": "text",
+        "type": "notBlank"
+      }
+    },
+    "country and age": {
+      "Country": {
+        "filterType": "text",
+        "type": "notBlank"
+      },
+      "Age": {
+        "filterType": "number",
+        "type": "notBlank"
+      }
+    }
+  }
+}

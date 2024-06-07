@@ -1,0 +1,14 @@
+{
+    "name": "newapp",
+    "version": "1.0.0",
+    "scripts": {
+      "build": "cd frontend && npm install && npm run build"
+    },
+    "dependencies": {
+      "express": "^4.17.1",
+      "cors": "^2.8.5",
+      "fs": "^0.0.1-security",
+      "path": "^0.12.7"
+    }
+  }
+  
