@@ -21,13 +21,16 @@ const userPrefsDir = path.join(__dirname, 'user_prefs');
 // Ensure the user preferences directory exists
 if (!fs.existsSync(userPrefsDir)) {
     fs.mkdirSync(userPrefsDir);
+    console.log('Created user_prefs directory');
 }
 
 // Load users from file
 const loadUsers = () => {
     try {
         if (fs.existsSync(usersFilePath)) {
-            return JSON.parse(fs.readFileSync(usersFilePath, 'utf-8'));
+            const users = JSON.parse(fs.readFileSync(usersFilePath, 'utf-8'));
+            console.log('Loaded users:', users);
+            return users;
         }
     } catch (error) {
         console.error("Error loading users:", error);
@@ -40,6 +43,7 @@ const loadUsers = () => {
 const saveUsers = (users) => {
     try {
         fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
+        console.log('Saved users:', users);
     } catch (error) {
         console.error("Error saving users:", error);
     }
@@ -61,6 +65,7 @@ app.post('/register', (req, res) => {
     // Create a preference file for the new user
     try {
         fs.writeFileSync(path.join(userPrefsDir, `${username}.json`), JSON.stringify({ filters: {}, session: {} }, null, 2));
+        console.log(`Created preference file for user: ${username}`);
     } catch (error) {
         console.error("Error creating preference file:", error);
     }
@@ -93,6 +98,7 @@ app.post('/savePreferences', (req, res) => {
     const prefs = { filters, session };
     try {
         fs.writeFileSync(prefsFilePath, JSON.stringify(prefs, null, 2));
+        console.log(`Saved preferences for user: ${username}`);
     } catch (error) {
         console.error("Error saving preferences:", error);
     }
@@ -111,6 +117,7 @@ app.post('/getPreferences', (req, res) => {
 
     try {
         const prefs = JSON.parse(fs.readFileSync(prefsFilePath, 'utf-8'));
+        console.log(`Retrieved preferences for user: ${username}`);
         res.status(200).json(prefs);
     } catch (error) {
         console.error("Error retrieving preferences:", error);
