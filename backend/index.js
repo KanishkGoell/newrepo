@@ -1,7 +1,12 @@
 import express from 'express';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
-import axios from 'axios';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -9,152 +14,160 @@ const PORT = process.env.PORT || 8080;
 app.use(cors());
 app.use(bodyParser.json());
 
-// JSONBin API configurations
-const JSONBIN_BASE_URL = 'https://api.jsonbin.io/v3/b';
-const USERS_BIN_ID = process.env.USERS_BIN_ID;
-const PREFS_BIN_ID = process.env.PREFS_BIN_ID;
-const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY;
+// File paths
+const usersFilePath = path.join(__dirname, 'users.json');
 
-// Function to read a bin from JSONBin
-const readBinFromJSONBin = async (binId) => {
+
+// Path to the single user preferences file
+const userPrefsFilePath = path.join(__dirname, 'user_prefs.json');
+
+// Ensure the user preferences file exists
+if (!fs.existsSync(userPrefsFilePath)) {
+    fs.writeFileSync(userPrefsFilePath, JSON.stringify({}));
+    console.log('Created user_prefs.json file');
+}
+
+
+// Load user preferences
+const loadUserPrefs = () => {
     try {
-        const response = await axios.get(`${JSONBIN_BASE_URL}/${binId}/latest`, {
-            headers: {
-                'X-Master-Key': JSONBIN_API_KEY
-            }
-        });
-        return response.data.record;
-    } catch (err) {
-        console.error('Error reading bin from JSONBin:', err.response ? err.response.data : err.message);
-        throw err;
+        if (fs.existsSync(userPrefsFilePath)) {
+            const prefs = JSON.parse(fs.readFileSync(userPrefsFilePath, 'utf-8'));
+            console.log('Loaded user preferences:', prefs);
+            return prefs;
+        }
+    } catch (error) {
+        console.error("Error loading user preferences:", error);
+    }
+    return {};
+};
+
+// Save user preferences
+const saveUserPrefs = (prefs) => {
+    try {
+        fs.writeFileSync(userPrefsFilePath, JSON.stringify(prefs, null, 2));
+        console.log('Saved user preferences:', prefs);
+    } catch (error) {
+        console.error("Error saving user preferences:", error);
     }
 };
 
-// Function to write a bin to JSONBin
-const writeBinToJSONBin = async (binId, data) => {
+// Load users from file
+const loadUsers = () => {
     try {
-        await axios.put(`${JSONBIN_BASE_URL}/${binId}`, data, {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_API_KEY
-            }
-        });
-        console.log(`Bin ${binId} written to JSONBin successfully`);
-    } catch (err) {
-        console.error('Error writing bin to JSONBin:', err.response ? err.response.data : err.message);
-        throw err;
+        if (fs.existsSync(usersFilePath)) {
+            const users = JSON.parse(fs.readFileSync(usersFilePath, 'utf-8'));
+            console.log('Loaded users:', users);
+            return users;
+        }
+    } catch (error) {
+        console.error("Error loading users:", error);
+        return [];
     }
+    return [];
 };
 
-// Load users from JSONBin
-const loadUsers = async () => {
-    return await readBinFromJSONBin(USERS_BIN_ID) || [];
-};
-
-// Save users to JSONBin
-const saveUsers = async (users) => {
-    await writeBinToJSONBin(USERS_BIN_ID, users);
-};
-
-// Load user preferences from JSONBin
-const loadUserPrefs = async () => {
-    return await readBinFromJSONBin(PREFS_BIN_ID) || {};
-};
-
-// Save user preferences to JSONBin
-const saveUserPrefs = async (prefs) => {
-    await writeBinToJSONBin(PREFS_BIN_ID, prefs);
+// Save users to file
+const saveUsers = (users) => {
+    try {
+        fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
+        console.log('Saved users:', users);
+    } catch (error) {
+        console.error("Error saving users:", error);
+    }
 };
 
 // Register a new user
-app.post('/register', async (req, res) => {
-    try {
-        const { username, email, password } = req.body;
-        const users = await loadUsers();
+app.post('/register', (req, res) => {
+    const { username, email, password } = req.body;
+    const users = loadUsers();
 
-        // Check if the user already exists
-        if (users.some(user => user.username === username || user.email === email)) {
-            return res.status(400).send('User already exists.');
-        }
-
-        // Create a new user object
-        const newUser = { username, email, password };
-        users.push(newUser);
-        await saveUsers(users);
-
-        // Load existing user preferences
-        const prefs = await loadUserPrefs();
-
-        // Initialize preferences for the new user
-        prefs[username] = { filters: {}, session: {} };
-
-        // Save updated preferences
-        await saveUserPrefs(prefs);
-
-        console.log(`Initialized preference data for user: ${username}`);
-        res.status(201).send('User registered successfully.');
-    } catch (error) {
-        console.error('Error during user registration:', error);
-        res.status(500).send('Internal Server Error');
+    // Check if the user already exists based on username or email
+    if (users.some(user => user.username === username || user.email === email)) {
+        return res.status(400).send('User already exists.');
     }
+
+    // Create a new user object
+    const newUser = { username, email, password };
+    users.push(newUser);
+    saveUsers(users);
+
+    // Load existing user preferences
+    const prefs = loadUserPrefs();
+
+    // Initialize preferences for the new user
+    prefs[username] = { filters: {}, session: {} };
+
+    // Save updated preferences
+    saveUserPrefs(prefs);
+
+    console.log(`Initialized preference data for user: ${username}`);
+    res.status(201).send('User registered successfully.');
 });
 
+
 // Login a user
-app.post('/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const users = await loadUsers();
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    const users = loadUsers();
 
-        const user = users.find(user => user.username === username && user.password === password);
-        if (!user) {
-            return res.status(401).send('Invalid credentials.');
-        }
-
-        res.status(200).send('Login successful.');
-    } catch (error) {
-        console.error('Error during user login:', error);
-        res.status(500).send('Internal Server Error');
+    const user = users.find(user => user.username === username && user.password === password);
+    if (!user) {
+        return res.status(401).send('Invalid credentials.');
     }
+
+    res.status(200).send('Login successful.');
 });
 
 // Save user preferences
-app.post('/savePreferences', async (req, res) => {
-    try {
-        const { username, filters, session } = req.body;
+app.post('/savePreferences', (req, res) => {
+    const { username, filters, session } = req.body;
 
-        // Load all preferences
-        const allPrefs = await loadUserPrefs();
-        allPrefs[username] = { filters, session }; // Update preferences for the user
+    // Load all preferences
+    const allPrefs = loadUserPrefs();
+    allPrefs[username] = { filters, session }; // Update preferences for the user
 
-        // Save updated preferences
-        await saveUserPrefs(allPrefs);
+    // Save updated preferences
+    saveUserPrefs(allPrefs);
 
-        res.status(200).send('Preferences saved successfully.');
-    } catch (error) {
-        console.error('Error saving preferences:', error);
-        res.status(500).send('Internal Server Error');
-    }
+    res.status(200).send('Preferences saved successfully.');
 });
 
+
 // Retrieve user preferences
-app.post('/getPreferences', async (req, res) => {
-    try {
-        const { username } = req.body;
+app.post('/getPreferences', (req, res) => {
+    const { username } = req.body;
 
-        // Load all preferences
-        const allPrefs = await loadUserPrefs();
+    // Load all preferences
+    const allPrefs = loadUserPrefs();
 
-        // Check if the user's preferences exist
-        if (!allPrefs[username]) {
-            return res.status(404).send('User not found.');
-        }
-
-        console.log(`Retrieved preferences for user: ${username}`);
-        res.status(200).json(allPrefs[username]);
-    } catch (error) {
-        console.error('Error retrieving preferences:', error);
-        res.status(500).send('Internal Server Error');
+    // Check if the user's preferences exist
+    if (!allPrefs[username]) {
+        return res.status(404).send('User not found.');
     }
+
+    console.log(`Retrieved preferences for user: ${username}`);
+    res.status(200).json(allPrefs[username]);
+});
+
+
+// Endpoint to serve the JSON file
+app.get("/getTable", (req, res) => {
+    const jsonFilePath = path.join(__dirname, 'data.json');
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error("Error reading JSON file:", err);
+            res.status(500).send("Internal Server Error");
+            return;
+        }
+        res.send(JSON.parse(data));
+    });
+});
+
+// Serve the static files from the React app
+app.use(express.static(path.join(__dirname, 'build')));
+app.get('/', (req, res) => {
+    res.send('Server is running');
 });
 
 app.listen(PORT, () => console.log('Server is running on port ' + PORT));
