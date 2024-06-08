@@ -67,7 +67,7 @@ const MyAgGrid = ({ savePreferences, setGridApi }) => {
     ];
 
     useEffect(() => {
-        fetch('https://aggrid-backend-bvhu5sref-kanishk-goels-projects.vercel.app/getTable')
+        fetch('https://aggrid-backend-git-main-kanishk-goels-projects.vercel.app/getTable')
             .then(response => response.json())
             .then(data => {
                 const typedData = data.map(item => ({
