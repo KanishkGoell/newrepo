@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080;  // Use environment variable for port
 app.use(cors());
 app.use(bodyParser.json()); // Parse JSON bodies
 
@@ -25,7 +25,7 @@ if (!fs.existsSync(userPrefsDir)) {
 
 // Load users from file
 const loadUsers = () => {
-    if (fs.existsSync(usersFilePath)) {
+    if (fs.exists(usersFilePath)) {
         return JSON.parse(fs.readFileSync(usersFilePath, 'utf-8'));
     }
     return [];
@@ -96,31 +96,27 @@ app.post('/getPreferences', (req, res) => {
     res.status(200).json(prefs);
 });
 
-
-
 // Endpoint to serve the JSON file
 app.get("/getTable", (req, res) => {
-  const jsonFilePath = path.join(__dirname, 'data.json');
-  console.log(jsonFilePath);
-  fs.readFile(jsonFilePath, 'utf8', (err, data) => {
-    if (err) {
-      console.error("Error reading JSON file:", err);
-      res.status(500).send("Internal Server Error");
-      return;
-    }
-    res.send(JSON.parse(data));
-  });
+    const jsonFilePath = path.join(__dirname, 'data.json');
+    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error("Error reading JSON file:", err);
+            res.status(500).send("Internal Server Error");
+            return;
+        }
+        res.send(JSON.parse(data));
+    });
 });
 
 // Serve the static files from the React app
 app.use(express.static(path.join(__dirname, 'build')));
-app.use("/", (req, res) => {res.sendFile("Server is running")});
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+app.use("/", (req, res) => {
+    res.sendFile("Server is running")
 });
 
-
-
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 app.listen(PORT, () => console.log('Server is running on port ' + PORT));
