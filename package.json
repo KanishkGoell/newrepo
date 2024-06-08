@@ -5,6 +5,8 @@
         "build": "cd frontend && npm install && npm run build"
     },
     "dependencies": {
+        "aws-sdk": "^2.1637.0",
+        "axios": "^1.7.2",
         "cors": "^2.8.5",
         "express": "^4.17.1",
         "fs": "^0.0.1-security",
