@@ -67,7 +67,7 @@ const MyAgGrid = ({ savePreferences, setGridApi }) => {
     ];
 
     useEffect(() => {
-        fetch('newapp/frontend/api/getTable.js')
+        fetch('http://localhost:8080/getTable')
             .then(response => response.json())
             .then(data => {
                 const typedData = data.map(item => ({

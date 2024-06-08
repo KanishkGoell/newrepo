@@ -61,7 +61,7 @@ const Dashboard = () => {
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('./api/register', {
+            const response = await fetch('http://localhost:8080/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password }),
@@ -82,7 +82,7 @@ const Dashboard = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('./api/login', {
+            const response = await fetch('http://localhost:8080/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
@@ -115,7 +115,7 @@ const Dashboard = () => {
     const savePreferences = async (filters) => {
         if (!currentUser) return;
         try {
-            await fetch('./api/savePreferences', {
+            await fetch('http://localhost:8080/savePreferences', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: currentUser, filters }),
@@ -128,7 +128,7 @@ const Dashboard = () => {
     const getPreferences = async (username) => {
         if (!username) return;
         try {
-            const response = await fetch('./api/getPreferences', {
+            const response = await fetch('http://localhost:8080/getPreferences', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username }),
