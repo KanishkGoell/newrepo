@@ -10,7 +10,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-app.use(cors());
+const corsOptions = {
+    origin: 'https://aggrid-frontend-git-main-kanishk-goels-projects.vercel.app/', // replace with your frontend origin
+    optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 // jsonbin.io API details
