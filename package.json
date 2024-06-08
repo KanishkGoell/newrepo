@@ -2,13 +2,13 @@
     "name": "newapp",
     "version": "1.0.0",
     "scripts": {
-      "build": "cd frontend && npm install && npm run build"
+        "build": "cd frontend && npm install && npm run build"
     },
     "dependencies": {
-      "express": "^4.17.1",
-      "cors": "^2.8.5",
-      "fs": "^0.0.1-security",
-      "path": "^0.12.7"
+        "cors": "^2.8.5",
+        "express": "^4.17.1",
+        "fs": "^0.0.1-security",
+        "mongoose": "^8.4.1",
+        "path": "^0.12.7"
     }
-  }
-  
+}

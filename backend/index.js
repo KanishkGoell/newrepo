@@ -18,11 +18,39 @@ app.use(bodyParser.json());
 const usersFilePath = path.join(__dirname, 'users.json');
 const userPrefsDir = path.join(__dirname, 'user_prefs');
 
-// Ensure the user preferences directory exists
-if (!fs.existsSync(userPrefsDir)) {
-    fs.mkdirSync(userPrefsDir);
-    console.log('Created user_prefs directory');
+// Path to the single user preferences file
+const userPrefsFilePath = path.join(__dirname, 'user_prefs.json');
+
+// Ensure the user preferences file exists
+if (!fs.existsSync(userPrefsFilePath)) {
+    fs.writeFileSync(userPrefsFilePath, JSON.stringify({}));
+    console.log('Created user_prefs.json file');
 }
+
+
+// Load user preferences
+const loadUserPrefs = () => {
+    try {
+        if (fs.existsSync(userPrefsFilePath)) {
+            const prefs = JSON.parse(fs.readFileSync(userPrefsFilePath, 'utf-8'));
+            console.log('Loaded user preferences:', prefs);
+            return prefs;
+        }
+    } catch (error) {
+        console.error("Error loading user preferences:", error);
+    }
+    return {};
+};
+
+// Save user preferences
+const saveUserPrefs = (prefs) => {
+    try {
+        fs.writeFileSync(userPrefsFilePath, JSON.stringify(prefs, null, 2));
+        console.log('Saved user preferences:', prefs);
+    } catch (error) {
+        console.error("Error saving user preferences:", error);
+    }
+};
 
 // Load users from file
 const loadUsers = () => {
@@ -54,24 +82,29 @@ app.post('/register', (req, res) => {
     const { username, email, password } = req.body;
     const users = loadUsers();
 
+    // Check if the user already exists based on username or email
     if (users.some(user => user.username === username || user.email === email)) {
         return res.status(400).send('User already exists.');
     }
 
+    // Create a new user object
     const newUser = { username, email, password };
     users.push(newUser);
     saveUsers(users);
 
-    // Create a preference file for the new user
-    try {
-        fs.writeFileSync(path.join(userPrefsDir, `${username}.json`), JSON.stringify({ filters: {}, session: {} }, null, 2));
-        console.log(`Created preference file for user: ${username}`);
-    } catch (error) {
-        console.error("Error creating preference file:", error);
-    }
+    // Load existing user preferences
+    const prefs = loadUserPrefs();
 
+    // Initialize preferences for the new user
+    prefs[username] = { filters: {}, session: {} };
+
+    // Save updated preferences
+    saveUserPrefs(prefs);
+
+    console.log(`Initialized preference data for user: ${username}`);
     res.status(201).send('User registered successfully.');
 });
+
 
 // Login a user
 app.post('/login', (req, res) => {
@@ -90,40 +123,33 @@ app.post('/login', (req, res) => {
 app.post('/savePreferences', (req, res) => {
     const { username, filters, session } = req.body;
 
-    const prefsFilePath = path.join(userPrefsDir, `${username}.json`);
-    if (!fs.existsSync(prefsFilePath)) {
-        return res.status(404).send('User not found.');
-    }
+    // Load all preferences
+    const allPrefs = loadUserPrefs();
+    allPrefs[username] = { filters, session }; // Update preferences for the user
 
-    const prefs = { filters, session };
-    try {
-        fs.writeFileSync(prefsFilePath, JSON.stringify(prefs, null, 2));
-        console.log(`Saved preferences for user: ${username}`);
-    } catch (error) {
-        console.error("Error saving preferences:", error);
-    }
+    // Save updated preferences
+    saveUserPrefs(allPrefs);
 
     res.status(200).send('Preferences saved successfully.');
 });
+
 
 // Retrieve user preferences
 app.post('/getPreferences', (req, res) => {
     const { username } = req.body;
 
-    const prefsFilePath = path.join(userPrefsDir, `${username}.json`);
-    if (!fs.existsSync(prefsFilePath)) {
+    // Load all preferences
+    const allPrefs = loadUserPrefs();
+
+    // Check if the user's preferences exist
+    if (!allPrefs[username]) {
         return res.status(404).send('User not found.');
     }
 
-    try {
-        const prefs = JSON.parse(fs.readFileSync(prefsFilePath, 'utf-8'));
-        console.log(`Retrieved preferences for user: ${username}`);
-        res.status(200).json(prefs);
-    } catch (error) {
-        console.error("Error retrieving preferences:", error);
-        res.status(500).send("Internal Server Error");
-    }
+    console.log(`Retrieved preferences for user: ${username}`);
+    res.status(200).json(allPrefs[username]);
 });
+
 
 // Endpoint to serve the JSON file
 app.get("/getTable", (req, res) => {
