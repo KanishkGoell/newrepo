@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import mongoose from 'mongoose';
+import pkg from 'mongodb';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -19,33 +19,44 @@ const __dirname = path.dirname(__filename);
 app.use(cors());
 app.use(bodyParser.json());
 
+const { MongoClient, ServerApiVersion } = pkg;
+
 // Check if MONGO_URI is correctly set
 if (!process.env.MONGO_URI) {
     console.error('MONGO_URI is not defined. Check your .env file.');
     process.exit(1); // Exit the application
 }
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('Failed to connect to MongoDB:', err));
-
-// Define schemas
-const userSchema = new mongoose.Schema({
-    username: { type: String, unique: true, required: true },
-    email: { type: String, unique: true, required: true },
-    password: { type: String, required: true }
+const uri = process.env.MONGO_URI;
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
 });
 
-const userPrefsSchema = new mongoose.Schema({
-    username: { type: String, unique: true, required: true },
-    filters: Object,
-    session: Object
-});
+let db, usersCollection, userPrefsCollection;
 
-// Define models
-const User = mongoose.model('User', userSchema);
-const UserPrefs = mongoose.model('UserPrefs', userPrefsSchema);
+async function connectToMongoDB() {
+  try {
+    // Connect the client to the server
+    await client.connect();
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+    // Initialize database and collections
+    db = client.db("cluster1"); // Replace with your actual database name
+    usersCollection = db.collection("users");
+    userPrefsCollection = db.collection("user_prefs");
+  } catch (err) {
+    console.error('Failed to connect to MongoDB:', err);
+    process.exit(1); // Exit the application if the connection fails
+  }
+}
+
+connectToMongoDB().catch(console.dir);
 
 // Register a new user
 app.post('/register', async (req, res) => {
@@ -53,17 +64,18 @@ app.post('/register', async (req, res) => {
 
     try {
         // Check if the user already exists
-        if (await User.exists({ $or: [{ username }, { email }] })) {
+        const existingUser = await usersCollection.findOne({ $or: [{ username }, { email }] });
+        if (existingUser) {
             return res.status(400).send('User already exists.');
         }
 
         // Create a new user
-        const newUser = new User({ username, email, password });
-        await newUser.save();
+        const newUser = { username, email, password };
+        await usersCollection.insertOne(newUser);
 
         // Initialize preferences for the new user
-        const newUserPrefs = new UserPrefs({ username, filters: {}, session: {} });
-        await newUserPrefs.save();
+        const newUserPrefs = { username, filters: {}, session: {} };
+        await userPrefsCollection.insertOne(newUserPrefs);
 
         console.log(`Initialized preference data for user: ${username}`);
         res.status(201).send('User registered successfully.');
@@ -78,7 +90,7 @@ app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        const user = await User.findOne({ username, password });
+        const user = await usersCollection.findOne({ username, password });
         if (!user) {
             return res.status(401).send('Invalid credentials.');
         }
@@ -95,10 +107,10 @@ app.post('/savePreferences', async (req, res) => {
     const { username, filters, session } = req.body;
 
     try {
-        const userPrefs = await UserPrefs.findOneAndUpdate(
+        const result = await userPrefsCollection.updateOne(
             { username },
-            { filters, session },
-            { new: true, upsert: true }
+            { $set: { filters, session } },
+            { upsert: true }
         );
 
         res.status(200).send('Preferences saved successfully.');
@@ -113,7 +125,7 @@ app.post('/getPreferences', async (req, res) => {
     const { username } = req.body;
 
     try {
-        const userPrefs = await UserPrefs.findOne({ username });
+        const userPrefs = await userPrefsCollection.findOne({ username });
         if (!userPrefs) {
             return res.status(404).send('User not found.');
         }
