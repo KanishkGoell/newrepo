@@ -10,6 +10,9 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const MONGO_URI = process.env.MONGO_URI;
 
+console.log('MONGO_URI:', process.env.MONGO_URI);
+
+
 app.use(cors());
 app.use(bodyParser.json());
 
