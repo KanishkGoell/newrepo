@@ -58,6 +58,15 @@ async function connectToMongoDB() {
 
 connectToMongoDB().catch(console.dir);
 
+// Middleware to ensure database connection is established
+app.use((req, res, next) => {
+  if (!db || !usersCollection || !userPrefsCollection) {
+    console.error('Database connection not established');
+    return res.status(503).send('Database connection not established');
+  }
+  next();
+});
+
 // Register a new user
 app.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
