@@ -90,7 +90,7 @@ app.post('/register', async (req, res) => {
         await userPrefsCollection.insertOne(newUserPrefs);
 
         console.log(`Initialized preference data for user: ${username}`);
-        res.status(201).send('User registered successfully.');
+        res.status(201).json({ message: 'User registered successfully.', user: newUser });
     } catch (error) {
         console.error("Error registering user:", error);
         res.status(500).send('Internal Server Error');

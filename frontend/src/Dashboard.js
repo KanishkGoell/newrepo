@@ -69,7 +69,12 @@ const Dashboard = () => {
 
             if (response.ok) {
                 alert('Registration successful');
+                setIsLoggedIn(true);
+                setCurrentUser(username);
+                sessionStorage.setItem('currentUser', username);
                 closeRegisterModal();
+                getPreferences(username); // Load preferences after registration
+                window.location.reload();
             } else {
                 const error = await response.text();
                 alert(error);
