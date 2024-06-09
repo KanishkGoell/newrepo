@@ -56,7 +56,19 @@ async function connectToMongoDB() {
   }
 }
 
-connectToMongoDB().catch(console.dir);
+// Middleware to log requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
+// Ensure MongoDB is connected before handling any requests
+app.use(async (req, res, next) => {
+  if (!db || !usersCollection || !userPrefsCollection) {
+    await connectToMongoDB();
+  }
+  next();
+});
 
 // Register a new user
 app.post('/register', async (req, res) => {
